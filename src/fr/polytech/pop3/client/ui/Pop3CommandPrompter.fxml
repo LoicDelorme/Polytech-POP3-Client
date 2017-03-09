@@ -46,7 +46,7 @@
             <Circle fx:id="connectedCircle" fill="RED" radius="10.0" stroke="BLACK" strokeType="INSIDE" HBox.hgrow="ALWAYS" />
          </children>
       </HBox>
-      <TextArea fx:id="ouputTextArea" disable="true" editable="false" focusTraversable="false" prefHeight="650.0" prefWidth="500.0" wrapText="true" VBox.vgrow="ALWAYS">
+      <TextArea fx:id="ouputTextArea" editable="false" focusTraversable="false" prefHeight="650.0" prefWidth="500.0" wrapText="true" VBox.vgrow="ALWAYS">
          <font>
             <Font size="12.0" />
          </font>

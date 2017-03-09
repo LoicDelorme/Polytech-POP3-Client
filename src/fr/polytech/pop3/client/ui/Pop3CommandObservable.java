@@ -1,4 +1,4 @@
-package fr.polytech.pop3.client;
+package fr.polytech.pop3.client.ui;
 
 /**
  * This interface represents a POP 3 command observable.

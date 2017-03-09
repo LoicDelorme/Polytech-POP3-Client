@@ -1,12 +1,12 @@
 package fr.polytech.pop3.client.ui;
 
-import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-import fr.polytech.pop3.client.Pop3Client;
-import fr.polytech.pop3.client.Pop3CommandObservable;
-import fr.polytech.pop3.client.Pop3CommandObserver;
+import fr.polytech.pop3.client.impl.Pop3Client;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.fxml.FXML;
@@ -69,9 +69,9 @@ public class Pop3CommandPrompterController implements Initializable, Pop3Command
 	private Button sendCommandButton;
 
 	/**
-	 * The POP 3 command observer.
+	 * The POP 3 client.
 	 */
-	private Pop3CommandObserver pop3CommandObserver;
+	private Pop3Client pop3Client;
 
 	/**
 	 * The is connected flag.
@@ -84,15 +84,13 @@ public class Pop3CommandPrompterController implements Initializable, Pop3Command
 
 		this.hostnameInputTextField.disableProperty().bind(this.isConnected);
 		this.portInputTextField.disableProperty().bind(this.isConnected);
+		this.connectButton.disableProperty().bind(this.hostnameInputTextField.textProperty().isEmpty().or(this.portInputTextField.textProperty().isEmpty()).or(this.isConnected));
+		this.commandInputTextField.disableProperty().bind(this.isConnected.not());
+		this.sendCommandButton.disableProperty().bind(this.isConnected.not().or(this.commandInputTextField.textProperty().isEmpty()));
 
-		this.connectButton.disableProperty().bind(this.hostnameInputTextField.textProperty().isEmpty().and(this.portInputTextField.textProperty().isEmpty()).or(this.isConnected));
 		this.isConnected.addListener((object, oldValue, newValue) -> {
 			this.connectedCircle.setFill(newValue ? Color.LIMEGREEN : Color.RED);
 		});
-
-		this.commandInputTextField.disableProperty().bind(this.isConnected.not());
-		this.sendCommandButton.disableProperty().bind(this.isConnected.not().and(this.commandInputTextField.textProperty().isEmpty()));
-
 		this.connectButton.setOnAction(event -> onConnectAction());
 		this.commandInputTextField.setOnKeyPressed(event -> {
 			if (event.getCode() == KeyCode.ENTER) {
@@ -107,9 +105,16 @@ public class Pop3CommandPrompterController implements Initializable, Pop3Command
 	 */
 	private void onConnectAction() {
 		try {
-			this.pop3CommandObserver = new Pop3Client(this.hostnameInputTextField.getText().trim(), Integer.parseInt(this.portInputTextField.getText().trim()), this);
-		} catch (IOException e) {
-			this.ouputTextArea.appendText(e.getMessage());
+			final String hostname = this.hostnameInputTextField.getText().trim();
+			final int port = Integer.parseInt(this.portInputTextField.getText().trim());
+
+			this.pop3Client = new Pop3Client(hostname, port, this);
+			this.isConnected.set(true);
+		} catch (Exception e) {
+			final Writer writer = new StringWriter();
+			e.printStackTrace(new PrintWriter(writer));
+
+			this.ouputTextArea.appendText(writer.toString() + "\n");
 		}
 	}
 
@@ -117,11 +122,17 @@ public class Pop3CommandPrompterController implements Initializable, Pop3Command
 	 * The on command action.
 	 */
 	private void onCommandAction() {
-		this.pop3CommandObserver.notifyCommand(this.commandInputTextField.getText());
+		final String typedCommand = this.commandInputTextField.getText();
+
+		this.ouputTextArea.appendText("[CLIENT] " + typedCommand + "\n");
+		this.commandInputTextField.clear();
+
+		final String commandResult = this.pop3Client.sendCommand(typedCommand);
+		notifyCommandResult(commandResult);
 	}
 
 	@Override
 	public void notifyCommandResult(String commandResult) {
-		this.ouputTextArea.appendText(commandResult);
+		this.ouputTextArea.appendText("[SERVER] " + commandResult);
 	}
 }
