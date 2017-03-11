@@ -94,10 +94,10 @@ public class Pop3CommandPrompterController implements Initializable, Pop3Command
 		this.connectButton.setOnAction(event -> onConnectAction());
 		this.commandInputTextField.setOnKeyPressed(event -> {
 			if (event.getCode() == KeyCode.ENTER) {
-				onCommandAction();
+				onCommandAction("\n");
 			}
 		});
-		this.sendCommandButton.setOnAction(event -> onCommandAction());
+		this.sendCommandButton.setOnAction(event -> onCommandAction("\n"));
 	}
 
 	/**
@@ -120,19 +120,28 @@ public class Pop3CommandPrompterController implements Initializable, Pop3Command
 
 	/**
 	 * The on command action.
+	 * 
+	 * @param additionnalCharacter
+	 *            The additionnal character to add at the end of the command.
 	 */
-	private void onCommandAction() {
-		final String typedCommand = this.commandInputTextField.getText();
+	private void onCommandAction(String additionnalCharacter) {
+		final String typedCommand = this.commandInputTextField.getText().trim();
+		final String formattedTypedCommand = typedCommand + additionnalCharacter;
 
-		this.ouputTextArea.appendText("[CLIENT] " + typedCommand + "\n");
 		this.commandInputTextField.clear();
+		this.ouputTextArea.appendText("[CLIENT] " + formattedTypedCommand);
 
-		final String commandResult = this.pop3Client.sendCommand(typedCommand);
+		final String commandResult = this.pop3Client.sendCommand(formattedTypedCommand);
 		notifyCommandResult(commandResult);
+
+		if (typedCommand.equals("QUIT")) {
+			this.isConnected.set(false);
+			this.ouputTextArea.clear();
+		}
 	}
 
 	@Override
 	public void notifyCommandResult(String commandResult) {
-		this.ouputTextArea.appendText("[SERVER] " + commandResult);
+		this.ouputTextArea.appendText("[SERVER] " + commandResult + "\n");
 	}
 }

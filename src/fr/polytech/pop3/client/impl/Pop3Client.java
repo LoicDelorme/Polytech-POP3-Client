@@ -62,8 +62,7 @@ public class Pop3Client {
 		this.outputStream = new DataOutputStream(this.socket.getOutputStream());
 		this.pop3CommandObservable = pop3CommandObservable;
 
-		final String welcomingMessage = read();
-		Platform.runLater(() -> this.pop3CommandObservable.notifyCommandResult(welcomingMessage));
+		Platform.runLater(() -> this.pop3CommandObservable.notifyCommandResult(readCommandResult()));
 	}
 
 	/**
@@ -74,41 +73,39 @@ public class Pop3Client {
 	 * @return The command result.
 	 */
 	public String sendCommand(String command) {
-		write(command);
-		return read();
+		writeCommand(command);
+		return readCommandResult();
 	}
 
 	/**
-	 * The write method.
+	 * Write a command.
 	 * 
 	 * @param command
 	 *            The command to write.
 	 */
-	private void write(String command) {
+	private void writeCommand(String command) {
 		try {
-			this.outputStream.writeBytes(command + "\n");
-			LOGGER.log(Level.INFO, command);
+			this.outputStream.writeBytes(command);
 		} catch (IOException e) {
-			LOGGER.log(Level.SEVERE, "Failed to write command", e);
+			LOGGER.log(Level.SEVERE, "[CLIENT] Failed to write command", e);
 		}
 	}
 
 	/**
-	 * The read method.
+	 * Read a command result.
 	 * 
-	 * @return The read String.
+	 * @return The command result.
 	 */
-	private String read() {
+	private String readCommandResult() {
 		final StringBuilder result = new StringBuilder();
 		try {
 			String data;
-			while (((data = this.inputStream.readLine()) != null) && (!data.equals(""))) {
+			while ((data = this.inputStream.readLine()) != null && !data.equals("")) {
 				result.append(data);
-				result.append("\n");
+				result.append("\r\n");
 			}
-
 		} catch (IOException e) {
-			LOGGER.log(Level.SEVERE, "Failed to read command result", e);
+			LOGGER.log(Level.SEVERE, "[CLIENT] Failed to read command result", e);
 		}
 
 		return result.toString();
