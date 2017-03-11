@@ -12,14 +12,8 @@
     <td>Eclipse</td>
   </tr>
   <tr>
-    <td>
-      <b>Libraries</b>
-    </td>
-    <td>
-      <ul>
-        <li>JavaFX</li>
-      </ul>
-    </td>
+    <td><b>Libraries</b></td>
+    <td>JavaFX</td>
   </tr>
 </table>
 
