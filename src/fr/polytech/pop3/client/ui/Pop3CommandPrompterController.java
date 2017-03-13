@@ -4,6 +4,8 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.net.URL;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ResourceBundle;
 
 import fr.polytech.pop3.client.impl.Pop3Client;
@@ -110,11 +112,13 @@ public class Pop3CommandPrompterController implements Initializable, Pop3Command
 
 			this.pop3Client = new Pop3Client(hostname, port, this);
 			this.isConnected.set(true);
+
+			this.ouputTextArea.clear();
 		} catch (Exception e) {
 			final Writer writer = new StringWriter();
 			e.printStackTrace(new PrintWriter(writer));
 
-			this.ouputTextArea.appendText(writer.toString() + "\n");
+			this.ouputTextArea.appendText(writer.toString() + "\r\n");
 		}
 	}
 
@@ -126,17 +130,35 @@ public class Pop3CommandPrompterController implements Initializable, Pop3Command
 	 */
 	private void onCommandAction(String additionnalCharacter) {
 		final String typedCommand = this.commandInputTextField.getText().trim();
-		final String formattedTypedCommand = typedCommand + additionnalCharacter;
+		if (typedCommand.startsWith("/digest")) {
+			try {
+				final String input = typedCommand.split(" ")[1];
+				this.ouputTextArea.appendText("[DIGEST] " + input + "\r\n");
 
-		this.commandInputTextField.clear();
-		this.ouputTextArea.appendText("[CLIENT] " + formattedTypedCommand);
+				final byte[] digest = MessageDigest.getInstance("MD5").digest(input.getBytes());
+				final StringBuilder footprint = new StringBuilder();
+				for (byte b : digest) {
+					footprint.append(String.format("%02x", b));
+				}
 
-		final String commandResult = this.pop3Client.sendCommand(formattedTypedCommand);
-		notifyCommandResult(commandResult);
+				this.commandInputTextField.clear();
+				this.ouputTextArea.appendText("[DIGEST] " + footprint.toString() + "\r\n\r\n");
+			} catch (NoSuchAlgorithmException e) {
+				final Writer writer = new StringWriter();
+				e.printStackTrace(new PrintWriter(writer));
 
-		if (typedCommand.equals("QUIT")) {
-			this.isConnected.set(false);
-			this.ouputTextArea.clear();
+				this.ouputTextArea.appendText(writer.toString());
+			}
+		} else {
+			final String formattedTypedCommand = typedCommand + additionnalCharacter;
+
+			this.commandInputTextField.clear();
+			this.ouputTextArea.appendText("[CLIENT] " + formattedTypedCommand);
+			notifyCommandResult(this.pop3Client.sendCommand(formattedTypedCommand));
+
+			if (typedCommand.equals("QUIT")) {
+				this.isConnected.set(false);
+			}
 		}
 	}
 
