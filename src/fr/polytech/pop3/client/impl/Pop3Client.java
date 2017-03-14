@@ -5,8 +5,12 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 
 import fr.polytech.pop3.client.ui.Pop3CommandObservable;
 import javafx.application.Platform;
@@ -57,7 +61,11 @@ public class Pop3Client {
 	 *             If an error occurs.
 	 */
 	public Pop3Client(String serverHost, int serverPort, Pop3CommandObservable pop3CommandObservable) throws IOException {
-		this.socket = new Socket(serverHost, serverPort);
+		final SSLSocketFactory sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+		final SSLSocket sslSocket = (SSLSocket) sslSocketFactory.createSocket(serverHost, serverPort);
+		sslSocket.setEnabledCipherSuites(Arrays.stream(sslSocketFactory.getSupportedCipherSuites()).filter(cipher -> cipher.contains("anon")).toArray(size -> new String[size]));
+
+		this.socket = sslSocket;
 		this.inputStream = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
 		this.outputStream = new DataOutputStream(this.socket.getOutputStream());
 		this.pop3CommandObservable = pop3CommandObservable;
@@ -99,7 +107,7 @@ public class Pop3Client {
 	private String readCommandResult() {
 		final StringBuilder result = new StringBuilder();
 		try {
-			String data;
+			String data = null;
 			while ((data = this.inputStream.readLine()) != null && !data.equals("")) {
 				result.append(data);
 				result.append("\r\n");

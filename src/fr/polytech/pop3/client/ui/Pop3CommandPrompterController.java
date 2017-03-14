@@ -135,10 +135,10 @@ public class Pop3CommandPrompterController implements Initializable, Pop3Command
 				final String input = typedCommand.split(" ")[1];
 				this.ouputTextArea.appendText("[DIGEST] " + input + "\r\n");
 
-				final byte[] digest = MessageDigest.getInstance("MD5").digest(input.getBytes());
+				final byte[] footprintBytes = MessageDigest.getInstance("MD5").digest(input.getBytes());
 				final StringBuilder footprint = new StringBuilder();
-				for (byte b : digest) {
-					footprint.append(String.format("%02x", b));
+				for (byte footprintByte : footprintBytes) {
+					footprint.append(String.format("%02x", footprintByte));
 				}
 
 				this.commandInputTextField.clear();
@@ -154,6 +154,7 @@ public class Pop3CommandPrompterController implements Initializable, Pop3Command
 
 			this.commandInputTextField.clear();
 			this.ouputTextArea.appendText("[CLIENT] " + formattedTypedCommand);
+
 			notifyCommandResult(this.pop3Client.sendCommand(formattedTypedCommand));
 
 			if (typedCommand.equals("QUIT")) {
