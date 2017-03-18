@@ -5,7 +5,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
-import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -63,7 +62,7 @@ public class Pop3Client {
 	public Pop3Client(String serverHost, int serverPort, Pop3CommandObservable pop3CommandObservable) throws IOException {
 		final SSLSocketFactory sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
 		final SSLSocket sslSocket = (SSLSocket) sslSocketFactory.createSocket(serverHost, serverPort);
-		sslSocket.setEnabledCipherSuites(Arrays.stream(sslSocketFactory.getSupportedCipherSuites()).filter(cipher -> cipher.contains("anon")).toArray(size -> new String[size]));
+		sslSocket.setEnabledCipherSuites(sslSocketFactory.getSupportedCipherSuites());
 
 		this.socket = sslSocket;
 		this.inputStream = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
